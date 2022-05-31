@@ -1,4 +1,5 @@
-from .. import ma, Auth        
+from .. import ma
+from .model import Auth        
 class AuthSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Auth

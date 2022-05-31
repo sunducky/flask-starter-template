@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields, validates
 import re
-from .. import Auth, User  
+from .model import Auth
+from ..users.model import User
 
 class NewUserDTO(Schema):
     email = fields.Email(required=True)
