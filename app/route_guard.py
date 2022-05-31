@@ -2,12 +2,11 @@ from jwt import ExpiredSignatureError, InvalidSignatureError
 
 from flask import jsonify, request
 import jwt
-import os
+from app import app
 
 
 from functools import wraps
 
-secret = os.urandom(24)
 
 def requires_user_auth(f):
     @wraps(f)
@@ -17,8 +16,8 @@ def requires_user_auth(f):
             return jsonify({"message": "Missing Authorization Header"}), 401
         try:
             token = auth_header.split(' ')[1]
-            payload = jwt.decode(token, secret, algorithms=["HS256"])
-            user_id = payload['sub']
+            payload = jwt.decode(token, app.config.get('JWT_SECRET_KEY'), algorithms=["HS256"])
+            auth_id = payload['sub']
             role = payload['role']
             # check role
             if role != 'user':
@@ -27,10 +26,10 @@ def requires_user_auth(f):
             return jsonify({"message": "Expired or Invalid Token"}), 401
         except InvalidSignatureError:
             return jsonify({"message": "Malformed Token"}), 401
-        return f(user_id, *args, **kwargs)
+        return f(auth_id,*args, **kwargs)
     return decorated
 
-def required_admin_auth(f):
+def requires_admin_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
@@ -38,7 +37,7 @@ def required_admin_auth(f):
             return jsonify({"message": "Missing Authorization Header"}), 401
         try:
             token = auth_header.split(' ')[1]
-            payload = jwt.decode(token, secret, algorithms=["HS256"])
+            payload = jwt.decode(token, app.config.get('JWT_SECRET_KEY'), algorithms=["HS256"])
             user_id = payload['sub']
             role = payload['role']
             # check role
